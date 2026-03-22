@@ -43,7 +43,10 @@ def create_principled_material(
     bsdf.inputs["Base Color"].default_value = base_color
     bsdf.inputs["Metallic"].default_value = metallic
     bsdf.inputs["Roughness"].default_value = roughness
-    bsdf.inputs["Specular IOR Level"].default_value = specular
+    # "Specular IOR Level" (Blender 4.x) was called "Specular" in Blender 3.x
+    specular_input = bsdf.inputs.get("Specular IOR Level") or bsdf.inputs.get("Specular")
+    if specular_input:
+        specular_input.default_value = specular
 
     # Add Material Output node
     output = nodes.new(type="ShaderNodeOutputMaterial")
