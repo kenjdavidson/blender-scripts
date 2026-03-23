@@ -31,4 +31,7 @@ class HOLEINONE_PT_Panel(bpy.types.Panel):
         layout.prop(props, "use_manual_scale")
 
         layout.separator()
+        layout.prop(props, "generate_protective_frame")
+
+        layout.separator()
         layout.operator("object.generate_commemorative", icon="MESH_CUBE")

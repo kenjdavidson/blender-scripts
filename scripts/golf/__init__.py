@@ -65,6 +65,15 @@ class HOLEINONE_Properties(bpy.types.PropertyGroup):
         ),
         default=False,
     )
+    generate_protective_frame: bpy.props.BoolProperty(
+        name="Generate Protective Frame",
+        description=(
+            "When no Plaque_Base is imported from the SVG, automatically "
+            "create a base slightly larger than the Rough area to form a "
+            "protective lip around the carved surface"
+        ),
+        default=False,
+    )
 
 
 # ── Operator ─────────────────────────────────────────────────────────────────
