@@ -111,6 +111,9 @@ def carve_plaque(props):
             cutter.location.z = (
                 (props.plaque_thick / 2) - depth + (cutter.dimensions.z / 2)
             )
+            # TODO: add additional cutter modifications here (e.g. draft angles,
+            # displacement modifiers, or other per-cutter transformations) before
+            # the Boolean modifier is applied below.
             if not cutter.data.materials:
                 cutter.data.materials.append(mat)
 
