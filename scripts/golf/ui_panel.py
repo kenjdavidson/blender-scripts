@@ -19,7 +19,7 @@ class HOLEINONE_PT_Panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        props = context.scene.hole_in_one_props
+        props = context.scene.golf_props
 
         col = layout.column(align=True)
         col.label(text="Plaque Dimensions:")
