@@ -19,7 +19,7 @@ scripts/
   geometry/             # Mesh creation and manipulation utilities
     __init__.py
     add_grid_of_objects.py
-  hole_in_one/          # 3D-printable golf commemorative plaque generator
+  golf/                 # 3D-printable golf commemorative plaque generator
     __init__.py
     geometry_utils.py
     ui_panel.py
@@ -151,7 +151,7 @@ can run and reload addon packages directly.  Point it at any category folder
 | `batch_rename_objects.py` | Rename all selected (or all scene) objects with a prefix, suffix, and zero-padded index. |
 | `render_settings_preset.py` | Apply a named render preset (draft / final / eevee_preview) to the current scene. |
 
-### `scripts/hole_in_one/` — *Hole-In-One Commemorative Generator*
+### `scripts/golf/` — *Hole-In-One Commemorative Generator*
 
 | File | Description |
 |------|-------------|
@@ -170,7 +170,7 @@ can run and reload addon packages directly.  Point it at any category folder
 
 > **Tip – symbolic-link install on Windows:**
 > ```
-> mklink /D "%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\hole_in_one" "PATH_TO_THIS_REPO\scripts\hole_in_one"
+> mklink /D "%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\golf" "PATH_TO_THIS_REPO\scripts\golf"
 > ```
 
 ---

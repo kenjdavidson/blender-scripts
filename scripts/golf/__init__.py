@@ -5,7 +5,7 @@ Entry point for the Hole-In-One Commemorative Generator addon.  Registers the
 PropertyGroup, Operator, and Sidebar panel that together let you convert an
 imported SVG golf-course trace into a layered, 3D-printable plaque.
 
-Install this addon by zipping the ``hole_in_one/`` folder and installing it
+Install this addon by zipping the ``golf/`` folder and installing it
 via ``Edit > Preferences > Add-ons > Install``, or by copying/symlinking the
 folder into Blender's user addons directory.
 
@@ -78,7 +78,7 @@ class HOLEINONE_OT_Generate(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        props = context.scene.hole_in_one_props
+        props = context.scene.golf_props
         geometry_utils.carve_plaque(props)
         self.report({"INFO"}, "Plaque generated successfully")
         return {"FINISHED"}
@@ -96,7 +96,7 @@ _classes = (
 def register():
     for cls in _classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.hole_in_one_props = bpy.props.PointerProperty(
+    bpy.types.Scene.golf_props = bpy.props.PointerProperty(
         type=HOLEINONE_Properties
     )
 
@@ -104,7 +104,7 @@ def register():
 def unregister():
     for cls in reversed(_classes):
         bpy.utils.unregister_class(cls)
-    del bpy.types.Scene.hole_in_one_props
+    del bpy.types.Scene.golf_props
 
 
 if __name__ == "__main__":
