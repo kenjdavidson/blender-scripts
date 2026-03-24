@@ -7,6 +7,7 @@ Boolean carve operations to produce a layered 3D-printable plaque.
 """
 
 import bpy
+from . import draft_angle
 
 # --- CONSTANTS ---
 BASE_OBJECT_NAME = "Hole_In_One_Base"
@@ -186,9 +187,8 @@ def carve_plaque(props):
             cutter.location.z = (
                 (props.plaque_thick / 2) - depth + (cutter.dimensions.z / 2)
             )
-            # TODO: add additional cutter modifications here (e.g. draft angles,
-            # displacement modifiers, or other per-cutter transformations) before
-            # the Boolean modifier is applied below.
+            if getattr(props, "use_draft_angle", False):
+                draft_angle.apply_taper(cutter, props.draft_factor)
             if not cutter.data.materials:
                 cutter.data.materials.append(mat)
 
