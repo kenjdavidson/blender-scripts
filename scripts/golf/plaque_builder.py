@@ -20,6 +20,15 @@ from .floor_texture import FLOOR_TEXTURE_CONFIG, apply_floor_texture
 from .materials import setup_material
 from .svg_utils import find_plaque_base, sanitize_geometry
 
+# Maps a layer-name prefix to the corresponding props attribute name so that
+# depth can be read from the scene properties when use_layer_depths is enabled.
+_DEPTH_PROP_MAP = {
+    "Water": "depth_water",
+    "Sand": "depth_sand",
+    "Green": "depth_green",
+    "Fairway": "depth_fairway",
+}
+
 
 def carve_plaque(props):
     """Build the base plaque cube and Boolean-carve each SVG layer into it."""
@@ -70,8 +79,20 @@ def carve_plaque(props):
         mat = setup_material(prefix, color)
 
         for cutter in cutters:
+            # ── Resolve carve depth ───────────────────────────────────────────
+            # When custom layer depths are enabled, read the per-layer prop and
+            # clamp it so the cut cannot reach the bottom of the plaque.  Fall
+            # back to the COLOR_MAP default when the feature is off or the layer
+            # has no dedicated prop (e.g. Tee, Rough, Text).
+            if getattr(props, "use_layer_depths", False) and prefix in _DEPTH_PROP_MAP:
+                raw_depth = getattr(props, _DEPTH_PROP_MAP[prefix], depth)
+                # Clamp: leave at least CUTTER_EPSILON of material at the base.
+                effective_depth = min(raw_depth, props.plaque_thick - CUTTER_EPSILON)
+            else:
+                effective_depth = depth
+
             solidify = cutter.modifiers.new(name="Solidify", type="SOLIDIFY")
-            solidify.thickness = depth + CUTTER_EPSILON
+            solidify.thickness = effective_depth + CUTTER_EPSILON
             solidify.offset = -1.0
 
             cutter.location.z = props.plaque_thick / 2 + CUTTER_EPSILON

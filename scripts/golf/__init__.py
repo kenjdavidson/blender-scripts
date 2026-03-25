@@ -109,6 +109,42 @@ class HOLEINONE_Properties(bpy.types.PropertyGroup):
         ),
         default=False,
     )
+    use_layer_depths: bpy.props.BoolProperty(
+        name="Custom Layer Depths",
+        description=(
+            "Override the default carved depth for each layer type. "
+            "Values are clamped to the plaque thickness to prevent cut-through"
+        ),
+        default=False,
+    )
+    depth_water: bpy.props.FloatProperty(
+        name="Water (mm)",
+        description="Carved depth of Water layers in millimetres",
+        default=3.0,
+        min=0.1,
+        precision=2,
+    )
+    depth_sand: bpy.props.FloatProperty(
+        name="Sand (mm)",
+        description="Carved depth of Sand layers in millimetres",
+        default=2.4,
+        min=0.1,
+        precision=2,
+    )
+    depth_green: bpy.props.FloatProperty(
+        name="Green (mm)",
+        description="Carved depth of Green layers in millimetres",
+        default=1.8,
+        min=0.1,
+        precision=2,
+    )
+    depth_fairway: bpy.props.FloatProperty(
+        name="Fairway (mm)",
+        description="Carved depth of Fairway layers in millimetres",
+        default=1.2,
+        min=0.1,
+        precision=2,
+    )
 
 
 # ── Operator ─────────────────────────────────────────────────────────────────

@@ -52,5 +52,15 @@ class HOLEINONE_PT_Panel(bpy.types.Panel):
             col.separator()
             col.prop(props, "use_floor_texture")
 
+            col.separator()
+            col.prop(props, "use_layer_depths")
+            sub = col.column(align=True)
+            sub.enabled = props.use_layer_depths
+            sub.label(text="Layer Depths:")
+            sub.prop(props, "depth_water")
+            sub.prop(props, "depth_sand")
+            sub.prop(props, "depth_green")
+            sub.prop(props, "depth_fairway")
+
         layout.separator()
         layout.operator("object.generate_commemorative", icon="MESH_CUBE")
