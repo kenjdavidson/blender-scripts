@@ -16,6 +16,7 @@ from .config import (
     PROTECTIVE_FRAME_MARGIN,
 )
 from .draft_angle import apply_taper
+from .floor_texture import FLOOR_TEXTURE_CONFIG, apply_floor_texture
 from .materials import setup_material
 from .svg_utils import find_plaque_base, sanitize_geometry
 
@@ -75,6 +76,9 @@ def carve_plaque(props):
 
             cutter.location.z = props.plaque_thick / 2 + CUTTER_EPSILON
 
+            if getattr(props, "use_floor_texture", False) and prefix in FLOOR_TEXTURE_CONFIG:
+                apply_floor_texture(cutter, prefix, solidify)
+                
             if getattr(props, "use_draft_angle", False):
                 bpy.context.view_layer.objects.active = cutter
                 bpy.ops.object.modifier_apply(modifier="Solidify")
