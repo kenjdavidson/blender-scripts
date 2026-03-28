@@ -17,10 +17,6 @@ PLAQUE_BASE_PREFIXES = ("Plaque_Base", "Plaque_Frame")
 # strap holes. These bypass normal depth/taper logic and always cut through.
 STRAP_HOLE_PREFIXES = ("StrapHole",)
 
-# Extra margin (mm) added to each side when auto-generating a protective frame
-# from the Rough boundary.
-PROTECTIVE_FRAME_MARGIN = 2.0
-
 # Each entry maps a layer name prefix to (z_depth_from_surface_mm, RGBA_color).
 COLOR_MAP = {
     "Water": (3.0, (0.0, 0.3, 0.8, 1)),
