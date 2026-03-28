@@ -14,7 +14,6 @@ from .config import (
     COLOR_MAP,
     CUTTER_EPSILON,
     PLAQUE_BASE_PREFIXES,
-    PROTECTIVE_FRAME_MARGIN,
     STRAP_HOLE_PREFIXES,
 )
 from .cutter_pipeline import (
@@ -79,10 +78,6 @@ def carve_plaque(props):
     plaque_thickness = _resolve_plaque_thickness(props, all_svg_objs)
 
     plaque_base_svg = find_plaque_base(all_svg_objs)
-    rough_obj = next(
-        (o for o in all_svg_objs if o.name.startswith("Rough")), None
-    )
-
     if plaque_base_svg is not None:
         base_x = plaque_base_svg.dimensions.x
         base_y = plaque_base_svg.dimensions.y
@@ -90,9 +85,6 @@ def carve_plaque(props):
         plaque_base_svg.display_type = "WIRE"
         plaque_base_svg.hide_viewport = True
         plaque_base_svg.hide_render = True
-    elif props.generate_protective_frame and rough_obj is not None:
-        base_x = rough_obj.dimensions.x + PROTECTIVE_FRAME_MARGIN * 2
-        base_y = rough_obj.dimensions.y + PROTECTIVE_FRAME_MARGIN * 2
     else:
         base_x = props.plaque_width
         base_y = props.plaque_height

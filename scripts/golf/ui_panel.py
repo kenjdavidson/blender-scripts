@@ -25,20 +25,16 @@ class HOLEINONE_PT_Panel(bpy.types.Panel):
         col.label(text="Plaque Dimensions:")
         col.prop(props, "plaque_width")
         col.prop(props, "plaque_height")
-        col.prop(props, "use_auto_thickness")
+
+        layout.separator()
+        layout.prop(props, "use_auto_thickness")
         if props.use_auto_thickness:
-            sub = col.column(align=True)
+            sub = layout.column(align=True)
             sub.prop(props, "print_layer_height")
             sub.prop(props, "base_print_layers")
             sub.prop(props, "segment_print_layers")
         else:
-            col.prop(props, "plaque_thick")
-
-        layout.separator()
-        layout.prop(props, "use_manual_scale")
-
-        layout.separator()
-        layout.prop(props, "generate_protective_frame")
+            layout.prop(props, "plaque_thick")
 
         layout.separator()
         layout.prop(props, "generate_container")
@@ -61,7 +57,7 @@ class HOLEINONE_PT_Panel(bpy.types.Panel):
             icon="TRIA_DOWN" if props.show_advanced else "TRIA_RIGHT",
             emboss=False,
         )
-        if props.show_advanced or props.use_manual_scale:
+        if props.show_advanced:
             col = box.column(align=True)
             col.prop(props, "use_top_taper")
             sub = col.column(align=True)

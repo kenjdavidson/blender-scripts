@@ -4,7 +4,7 @@ import bmesh
 import bpy
 from mathutils import Matrix, Vector
 
-from .config import AUTO_SCALE_FACTOR, PLAQUE_BASE_PREFIXES
+from .config import PLAQUE_BASE_PREFIXES
 
 
 def ensure_upward_normals(mesh_data):
@@ -88,12 +88,8 @@ def sanitize_geometry(objects, props, output_collection):
         sanitized_objects.append(working_obj)
 
     anchor = find_plaque_base(sanitized_objects)
-    if anchor is None:
-        anchor = next(
-            (obj for obj in sanitized_objects if obj.name.startswith("Rough")), None
-        )
 
-    if not props.use_manual_scale and anchor:
+    if anchor:
         anchor_w = anchor.dimensions.x
         anchor_h = anchor.dimensions.y
 
@@ -108,9 +104,7 @@ def sanitize_geometry(objects, props, output_collection):
         max_svg_dim = max(
             max(obj.dimensions.x, obj.dimensions.y) for obj in sanitized_objects
         )
-        scale_ratio = (
-            min(props.plaque_width, props.plaque_height) * AUTO_SCALE_FACTOR
-        ) / max_svg_dim
+        scale_ratio = min(props.plaque_width, props.plaque_height) / max_svg_dim
 
     scale_matrix = Matrix.Diagonal((scale_ratio, scale_ratio, 1.0, 1.0))
     for obj in sanitized_objects:
