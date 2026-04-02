@@ -47,7 +47,10 @@ def ensure_inserts_collection():
 def clear_collection(collection):
     """Remove all objects from a generated output collection."""
     for obj in list(collection.objects):
+        mesh_data = obj.data if getattr(obj, "data", None) is not None else None
         bpy.data.objects.remove(obj, do_unlink=True)
+        if mesh_data is not None and mesh_data.users == 0:
+            bpy.data.meshes.remove(mesh_data)
 
 
 def move_object_to_collection(obj, target_collection):

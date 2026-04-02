@@ -53,6 +53,19 @@ from .svg_utils import find_plaque_base, sanitize_geometry
 _INSERT_DISPLAY_GAP_MM = 10.0
 
 
+def _dispose_temp_object(obj):
+    """Remove an unlinked temporary object and its mesh datablock if orphaned."""
+    if obj is None:
+        return
+
+    mesh_data = obj.data if getattr(obj, "data", None) is not None else None
+    if obj.name in bpy.data.objects:
+        bpy.data.objects.remove(obj, do_unlink=True)
+
+    if mesh_data is not None and mesh_data.users == 0 and mesh_data.name in bpy.data.meshes:
+        bpy.data.meshes.remove(mesh_data)
+
+
 def _xy_segments_intersect(p1, p2, q1, q2, eps=1e-9):
     """Return True when two XY line segments intersect (including collinear overlap)."""
 
@@ -157,8 +170,7 @@ def _find_max_safe_inset(source_obj, target_inset_mm, iterations=12):
         if _apply_flat_inset_safe(temp_obj, target_inset_mm):
             return target_inset_mm
     finally:
-        if temp_obj.data is not None and temp_obj.data.users == 0:
-            bpy.data.meshes.remove(temp_obj.data)
+        _dispose_temp_object(temp_obj)
 
     # Binary search for the largest safe inset.
     low = 0.0
@@ -176,8 +188,7 @@ def _find_max_safe_inset(source_obj, target_inset_mm, iterations=12):
             else:
                 high = mid
         finally:
-            if temp_obj.data is not None and temp_obj.data.users == 0:
-                bpy.data.meshes.remove(temp_obj.data)
+            _dispose_temp_object(temp_obj)
 
     return best
 
