@@ -255,7 +255,7 @@ class HOLEINONE_OT_Generate(bpy.types.Operator):
 
 
 class HOLEINONE_InsertProperties(bpy.types.PropertyGroup):
-    """Scene-level properties for the Hole-In-One insert layer builder."""
+    """Scene-level properties for the Insert Builder."""
 
     plaque_width: bpy.props.FloatProperty(
         name="Width (mm)",
@@ -322,6 +322,26 @@ class HOLEINONE_InsertProperties(bpy.types.PropertyGroup):
             "receiving hole instead"
         ),
         default=True,
+    )
+    text_extrusion_height: bpy.props.FloatProperty(
+        name="Text Height/Depth (mm)",
+        description=(
+            "Emboss height above base surface or engrave depth below surface "
+            "for Text.XXX objects in Insert Builder"
+        ),
+        default=1.0,
+        min=0.1,
+        max=10.0,
+        precision=2,
+    )
+    text_mode: bpy.props.EnumProperty(
+        name="Text Mode",
+        description="Choose whether Text.XXX is embossed or engraved on the base",
+        items=(
+            ("EMBOSS", "Emboss", "Raise text above the top surface"),
+            ("ENGRAVE", "Engrave", "Cut text into the top surface"),
+        ),
+        default="EMBOSS",
     )
 
 

@@ -9,9 +9,9 @@ import bpy
 
 
 class HOLEINONE_PT_Panel(bpy.types.Panel):
-    """Sidebar panel for the Hole-In-One Commemorative Generator"""
+    """Sidebar panel for the Engrave Builder"""
 
-    bl_label = "Hole-In-One Generator"
+    bl_label = "Engrave Builder"
     bl_idname = "HOLEINONE_PT_Panel"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -89,14 +89,14 @@ class HOLEINONE_PT_Panel(bpy.types.Panel):
 
 
 class HOLEINONE_PT_InsertPanel(bpy.types.Panel):
-    """Sidebar panel for the Insert Layer Builder.
+    """Sidebar panel for the Insert Builder.
 
     Generates a set of printable raised insert pieces (one per terrain layer)
     that slot into corresponding holes in their parent layer.  The finished
     inserts can be glued together to create a multi-colour, raised design.
     """
 
-    bl_label = "Insert Layer Builder"
+    bl_label = "Insert Builder"
     bl_idname = "HOLEINONE_PT_InsertPanel"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -132,6 +132,12 @@ class HOLEINONE_PT_InsertPanel(bpy.types.Panel):
         col.label(text="Fit / Clearance:")
         col.prop(props, "insert_clearance")
         col.prop(props, "use_shrink_element")
+
+        layout.separator()
+        col = layout.column(align=True)
+        col.label(text="Text Options (Plaque Base):")
+        col.prop(props, "text_mode")
+        col.prop(props, "text_extrusion_height")
 
         layout.separator()
         layout.operator("object.build_inserts", icon="MESH_CUBE")

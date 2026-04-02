@@ -76,6 +76,17 @@ class InsertRequest:
     When ``False``, keep the insert at full SVG size and instead grow the
     receiving hole by :attr:`insert_clearance`."""
 
+    # ── Text-on-base controls ────────────────────────────────────────────────
+    text_mode: str = "EMBOSS"
+    """Text mode for Insert Builder base text processing.
+
+    ``"EMBOSS"`` raises Text.* geometry above the base surface and
+    ``"ENGRAVE"`` cuts Text.* geometry into the base.
+    """
+
+    text_extrusion_height: float = 1.0
+    """Emboss height / engrave depth (mm) for Text.* on the insert base."""
+
     # ── Validation ────────────────────────────────────────────────────────────
 
     def __post_init__(self):
