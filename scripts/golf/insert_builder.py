@@ -51,6 +51,8 @@ from .svg_utils import find_plaque_base, sanitize_geometry
 
 # Horizontal gap between adjacent insert display objects (mm).
 _INSERT_DISPLAY_GAP_MM = 10.0
+# Extra clearance between the base and the first displayed insert (mm).
+_BASE_INSERT_START_CLEARANCE_MM = 0.5
 
 
 def _dispose_temp_object(obj):
@@ -262,6 +264,16 @@ def _boolean_subtract(target, cutter):
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
 
+def _boolean_union(target, operand, name_prefix="InsertUnion"):
+    """Apply a Boolean union from *operand* into *target*."""
+    mod = target.modifiers.new(type="BOOLEAN", name=f"{name_prefix}_{operand.name}")
+    mod.object = operand
+    mod.operation = "UNION"
+    mod.solver = "EXACT"
+    bpy.context.view_layer.objects.active = target
+    bpy.ops.object.modifier_apply(modifier=mod.name)
+
+
 def _cleanup_insert_mesh(obj):
     """Repair common mesh artefacts that can manifest as extrusion spikes."""
     if obj is None or obj.data is None:
@@ -347,6 +359,114 @@ def _apply_text_to_base(
     strategy = get_strategy(_resolve_text_element_type(props))
     strategy.process(text_objs, "Text", text_config, props, ctx, text_material)
     return len(text_objs)
+
+
+def _apply_embossed_border_to_base(
+    props,
+    base,
+    plaque_thick,
+    base_x,
+    base_y,
+    plaque_base_svg,
+    inserts_collection,
+    cutters_collection,
+):
+    """Optionally add a raised rectangular border ring to the insert base."""
+    if not getattr(props, "use_embossed_border", False):
+        return False
+
+    border_height = float(max(0.0, getattr(props, "text_extrusion_height", 0.0)))
+    border_inset = float(max(0.0, getattr(props, "border_inset", 0.0)))
+    border_width = float(max(0.0, getattr(props, "border_width", 0.8)))
+
+    if border_height <= 0.0 or border_width <= 0.0:
+        print("[golf_tools] Embossed border skipped: non-positive height/width")
+        return False
+
+    if plaque_base_svg is not None:
+        # Follow the imported plaque outline (supports circles/organic borders).
+        border_obj = _duplicate_mesh_obj(
+            plaque_base_svg,
+            "Insert_Base_Border",
+            inserts_collection,
+        )
+        if border_inset > 0.0 and not _apply_flat_inset_safe(border_obj, border_inset):
+            print("[golf_tools] Embossed border skipped: invalid outer inset")
+            return False
+
+        inner_cutter = _duplicate_mesh_obj(
+            plaque_base_svg,
+            "_Insert_Base_BorderInnerCut",
+            cutters_collection,
+        )
+        inner_inset = border_inset + border_width
+        if inner_inset > 0.0 and not _apply_flat_inset_safe(inner_cutter, inner_inset):
+            print("[golf_tools] Embossed border skipped: invalid inner inset")
+            return False
+
+        _apply_solidify_and_bake(border_obj, border_height, offset=1.0)
+        _cleanup_insert_mesh(border_obj)
+        border_obj.location.z = plaque_thick / 2.0
+
+        _apply_solidify_and_bake(
+            inner_cutter,
+            border_height + CUTTER_TOP_POKE_MM * 2.0 + CUTTER_EPSILON,
+            offset=1.0,
+        )
+        _cleanup_insert_mesh(inner_cutter)
+        inner_cutter.location.z = plaque_thick / 2.0 - CUTTER_TOP_POKE_MM
+    else:
+        # Fallback for legacy SVGs without a dedicated plaque outline.
+        outer_x = float(base_x) - (2.0 * border_inset)
+        outer_y = float(base_y) - (2.0 * border_inset)
+        if outer_x <= 0.0 or outer_y <= 0.0:
+            print("[golf_tools] Embossed border skipped: inset exceeds base size")
+            return False
+
+        inner_x = outer_x - (2.0 * border_width)
+        inner_y = outer_y - (2.0 * border_width)
+        if inner_x <= 0.0 or inner_y <= 0.0:
+            print("[golf_tools] Embossed border skipped: width too large for inset/base")
+            return False
+
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        border_obj = bpy.context.active_object
+        border_obj.name = "Insert_Base_Border"
+        move_object_to_collection(border_obj, inserts_collection)
+        border_obj.scale = (outer_x, outer_y, border_height)
+        bpy.ops.object.transform_apply(scale=True)
+        border_obj.location.z = plaque_thick / 2.0 + border_height / 2.0
+
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        inner_cutter = bpy.context.active_object
+        inner_cutter.name = "_Insert_Base_BorderInnerCut"
+        move_object_to_collection(inner_cutter, cutters_collection)
+        inner_cutter.scale = (
+            inner_x,
+            inner_y,
+            border_height + CUTTER_TOP_POKE_MM * 2.0 + CUTTER_EPSILON,
+        )
+        bpy.ops.object.transform_apply(scale=True)
+        inner_cutter.location.z = border_obj.location.z
+
+    text_cfg = COLOR_MAP.get("Text")
+    if text_cfg is not None and not border_obj.data.materials:
+        border_obj.data.materials.append(setup_material("Text", text_cfg.color))
+
+    _boolean_subtract(border_obj, inner_cutter)
+    _boolean_union(base, border_obj, name_prefix="InsertBorder")
+
+    inner_cutter.display_type = "WIRE"
+    inner_cutter.hide_render = True
+    border_obj.hide_render = True
+
+    print(
+        "[golf_tools] Embossed border added:",
+        "inset=", round(border_inset, 3),
+        "width=", round(border_width, 3),
+        "height=", round(border_height, 3),
+    )
+    return True
 
 
 def build_inserts(props):
@@ -479,8 +599,9 @@ def build_inserts(props):
         hole_cutter.hide_render = True
 
     # ── Build an insert slab for each terrain layer ──────────────────────────
-    # Start display offset to the right of the base plaque.
-    display_x_offset = base_x / 2.0 + _INSERT_DISPLAY_GAP_MM
+    # Start inserts a full base-width plus a small clearance to the right so
+    # the first piece never overlaps the base in preview/output layout.
+    display_x_offset = base_x + _BASE_INSERT_START_CLEARANCE_MM
 
     for layer_index, (prefix, config) in enumerate(present_layers):
         svg_sources = [obj for obj in all_svg_objs if obj.name.startswith(prefix)]
@@ -582,6 +703,44 @@ def build_inserts(props):
         cutters_collection,
     )
 
+    border_added = _apply_embossed_border_to_base(
+        props,
+        base,
+        plaque_thick,
+        base_x,
+        base_y,
+        plaque_base_svg,
+        inserts_collection,
+        cutters_collection,
+    )
+
+    # ── Cut strap holes all the way through the base ─────────────────────────
+    # StrapHole objects bypass layer logic and always produce a full-depth
+    # through-hole so the strap/hardware can be attached after printing.
+    strap_hole_objs = [
+        obj for obj in all_svg_objs
+        if any(obj.name.startswith(pre) for pre in STRAP_HOLE_PREFIXES)
+    ]
+    for sh_index, sh_src in enumerate(strap_hole_objs):
+        sh_cutter = _duplicate_mesh_obj(
+            sh_src,
+            f"_StrapHoleCut_{sh_index:02d}",
+            cutters_collection,
+        )
+        # Position above the top surface and solidify downward through the
+        # full base thickness with margins to avoid coplanar artefacts.
+        sh_cutter.location.z = plaque_thick / 2.0 + CUTTER_TOP_POKE_MM
+        _apply_solidify_and_bake(
+            sh_cutter,
+            plaque_thick + CUTTER_TOP_POKE_MM * 2.0 + CUTTER_EPSILON,
+            offset=-1.0,
+        )
+        if is_valid_cutter_mesh(sh_cutter):
+            _boolean_subtract(base, sh_cutter)
+        sh_cutter.display_type = "WIRE"
+        sh_cutter.hide_render = True
+        print("[golf_tools] Strap hole cut:", sh_src.name)
+
     cleanup_base_mesh(base)
 
     if bpy.context.mode != "OBJECT":
@@ -596,5 +755,7 @@ def build_inserts(props):
         "hole_depth=", round(effective_hole_depth, 3), "mm,",
         "clearance=", round(clearance, 3), "mm",
         "(shrink_element=", use_shrink, ")",
+        "strap_holes=", len(strap_hole_objs),
+        "border=", border_added,
     )
 
